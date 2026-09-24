@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Generator lozinki</title>
+<meta name="description" content="Jake nasumične lozinke, fraze od hrvatskih riječi i PIN-ovi s procjenom jačine. Generira se u tvom pregledniku kriptografski sigurnim generatorom — ništa se ne šalje.">
+<link rel="icon" href="zajednicko/logo.svg">
+<link rel="stylesheet" href="zajednicko/app-bonic.css">
+<style>
+  .glavna { font: 600 clamp(18px, 3vw, 26px)/1.35 ui-monospace, "Cascadia Mono", Consolas, monospace; word-break: break-all; padding: 18px; border-radius: 12px; background: var(--polje); border: 1px solid var(--crta); min-height: 70px; display: flex; align-items: center; gap: 12px; justify-content: space-between; }
+  .glavna span { flex: 1; }
+  .glavna .br { color: var(--akcent-jak); } .glavna .zn { color: #d9480f; }
+  @media (prefers-color-scheme: dark) { .glavna .zn { color: #ffa94d; } }
+  .jacina { margin-top: 12px; }
+  .traka { height: 8px; border-radius: 99px; background: var(--polje); overflow: hidden; border: 1px solid var(--crta); }
+  .traka div { height: 100%; transition: width .25s, background .25s; }
+  .jacina p { font-size: 13.5px; margin-top: 6px; color: var(--blijedo); }
+  .jacina b { color: var(--tekst); }
+  .opcije { display: flex; flex-direction: column; gap: 12px; }
+  .opcije output { font-weight: 700; color: var(--tekst); }
+  body[data-nacin="nasumicna"] .n-fraza, body[data-nacin="nasumicna"] .n-pin,
+  body[data-nacin="fraza"] .n-nasumicna, body[data-nacin="fraza"] .n-pin,
+  body[data-nacin="pin"] .n-nasumicna, body[data-nacin="pin"] .n-fraza { display: none !important; }
+  .popis { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .popis li { display: flex; gap: 8px; align-items: center; padding: 7px 10px; background: var(--polje); border: 1px solid var(--crta); border-radius: 9px; font-family: ui-monospace, Consolas, monospace; font-size: 14px; }
+  .popis li span { flex: 1; word-break: break-all; }
+  .popis button { border: 0; background: none; cursor: pointer; color: var(--blijedo); padding: 4px; }
+  .popis button:hover { color: var(--akcent-jak); }
+</style>
+</head>
+<body data-alat="generator-lozinki" data-nacin="nasumicna">
+<header class="ab-vrh"></header>
+
+<main class="ab-omot">
+  <section class="ab-uvod">
+    <span class="ab-ikona"><span data-ik="kljuc"></span></span>
+    <div>
+      <h1>Generator lozinki</h1>
+      <p>Lozinke se stvaraju kriptografski sigurnim generatorom slučajnih brojeva tvog preglednika (<span class="mono">crypto.getRandomValues</span>). Nitko ih ne vidi osim tebe — ne šalju se i ne spremaju.</p>
+    </div>
+  </section>
+
+  <div class="stupci sirok-lijevo">
+    <div class="slog">
+      <section class="kartica">
+        <div class="seg" role="radiogroup" aria-label="Vrsta" style="margin-bottom:14px">
+          <label><input type="radio" name="nacin" value="nasumicna" checked><span>Nasumična lozinka</span></label>
+          <label><input type="radio" name="nacin" value="fraza"><span>Fraza od riječi</span></label>
+          <label><input type="radio" name="nacin" value="pin"><span>PIN</span></label>
+        </div>
+        <div class="glavna"><span id="lozinka" aria-live="polite"></span>
+          <div class="gumbi"><button type="button" class="gumb" id="nova" title="Nova"><span data-ik="osvjezi"></span></button><button type="button" class="gumb glavni" id="kopiraj"><span data-ik="kopiraj"></span>Kopiraj</button></div></div>
+        <div class="jacina"><div class="traka"><div id="traka"></div></div><p id="opisJacine"></p></div>
+      </section>
+
+      <section class="kartica">
+        <div class="glava" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <h2 style="margin:0">Više odjednom</h2>
+          <div class="gumbi"><select id="koliko" aria-label="Koliko"><option>5</option><option selected>10</option><option>20</option><option>50</option></select><button type="button" class="gumb" id="kopirajSve"><span data-ik="kopiraj"></span>Kopiraj sve</button></div>
+        </div>
+        <ul class="popis" id="popis"></ul>
+      </section>
+    </div>
+
+    <div class="slog">
+      <section class="kartica opcije">
+        <h2>Postavke</h2>
+        <div class="polje n-nasumicna"><label for="duljina">Duljina <output id="duljinaIzlaz"></output></label><input type="range" id="duljina" min="6" max="64" value="16"></div>
+        <label class="kvacica n-nasumicna"><input type="checkbox" id="velika" checked><span>Velika slova (A–Z)</span></label>
+        <label class="kvacica n-nasumicna"><input type="checkbox" id="mala" checked><span>Mala slova (a–z)</span></label>
+        <label class="kvacica n-nasumicna"><input type="checkbox" id="brojke" checked><span>Brojke (0–9)</span></label>
+        <label class="kvacica n-nasumicna"><input type="checkbox" id="simboli" checked><span>Simboli (!@#$%…)</span></label>
+        <label class="kvacica n-nasumicna"><input type="checkbox" id="slicni" checked><span>Bez sličnih znakova (I l 1 O 0)</span></label>
+        <div class="polje n-nasumicna"><label for="izbaci">Izbaci znakove <small>npr. oni koje sustav ne prihvaća</small></label><input id="izbaci" class="mono" placeholder="&quot;'`\"></div>
+
+        <div class="polje n-fraza"><label for="rijeci">Broj riječi <output id="rijeciIzlaz"></output></label><input type="range" id="rijeci" min="3" max="10" value="5"></div>
+        <div class="polje n-fraza"><label for="razdjelnik">Razdjelnik</label><select id="razdjelnik"><option value="-">crtica (more-kruh-sova)</option><option value=".">točka</option><option value="_">donja crta</option><option value=" ">razmak</option><option value="">bez razdjelnika</option></select></div>
+        <label class="kvacica n-fraza"><input type="checkbox" id="veliko" checked><span>Prvo slovo riječi veliko</span></label>
+        <label class="kvacica n-fraza"><input type="checkbox" id="broj" checked><span>Dodaj broj</span></label>
+        <label class="kvacica n-fraza"><input type="checkbox" id="bezKvacica" checked><span>Bez č, ć, ž, š, đ (lakše na tuđoj tipkovnici)</span></label>
+
+        <div class="polje n-pin"><label for="pinDuljina">Broj znamenki <output id="pinIzlaz"></output></label><input type="range" id="pinDuljina" min="4" max="12" value="6"></div>
+        <p class="napomena n-pin">PIN je siguran samo tamo gdje se nakon nekoliko pogrešaka zaključava (kartica, mobitel).</p>
+      </section>
+
+      <section class="kartica">
+        <h2>Provjeri svoju lozinku</h2>
+        <input type="password" id="provjera" placeholder="Upiši lozinku…" autocomplete="off">
+        <label class="kvacica" style="margin-top:8px"><input type="checkbox" id="prikazi"><span>Prikaži</span></label>
+        <div class="jacina"><div class="traka"><div id="traka2"></div></div><p id="opis2">Provjera se radi samo u ovom pregledniku.</p></div>
+        <p class="napomena" style="margin-top:8px">Ovo je gruba procjena — ne poznaje sve riječi iz rječnika. Lozinka koju si već negdje koristio nikad nije sigurna, koliko god bila duga.</p>
+      </section>
+    </div>
+  </div>
+</main>
+
+<footer class="ab-dno"></footer>
+<script src="zajednicko/app-bonic.js"></script>
+<script src="rijeci.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
